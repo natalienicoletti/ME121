@@ -1,0 +1,60 @@
+# Natalie Nicoletti
+# Advanced Dynamics 
+from servo import Servo
+import time
+from machine import Pin 
+
+
+# define two servos
+servos = []
+for i in range(2):
+    servos.append(Servo(i))
+
+first_servo = servos[0]
+second_servo = servos[1]
+
+# define led
+led = Pin(22, Pin.OUT)
+
+# function that allows servo to step x degrees forward or backward
+def step(servo, increment):
+    degree = servo.read() - 90 
+    #print(f"{degree=}")
+    servo.write(degree + increment)
+
+# starting position of drawing
+first_servo.write(90)
+second_servo.write(-65)
+time.sleep(1)
+
+# variable that alternates which servo increments
+motor_first = True
+count = 0
+# the "drawing" is split up into 4 sections where each section is a unique frequency of each motor
+# the increments for the first servo to take in each section
+first_inc = [-3, 3, -3, 4]
+# the increments for the second servo to take in each section
+second_inc = [1, 1, 2, -1]
+curve_section = 0
+while count < 120:
+    if motor_first:
+        step(first_servo, first_inc[curve_section])
+    else:
+        step(second_servo, second_inc[curve_section])
+    time.sleep(.05)
+    #change to other motor
+    motor_first = not(motor_first)
+    count += 1
+    if count < 35:
+        curve_section = 0
+    elif count < 45: 
+        curve_section = 1
+        
+    elif count < 55:
+        curve_section = 2
+    else:
+        curve_section = 3
+        
+    
+
+  
