@@ -5,44 +5,93 @@ from machine import I2C
 from machine import Pin
 import ssd1306
 
-print(dir(math))
-
 i2c = I2C(scl = Pin(23), sda = Pin(22))
 #this might give you a depreciation warning - you can ignore it
 
 display = ssd1306.SSD1306_I2C(128, 64,i2c)
-
 import servo
+
+# define servos
 servo_top = servo.Servo(0)
 servo_bot = servo.Servo(1)
 
-# define servos
+# go to starting position
 servo_top.write(0)
 servo_bot.write(90)
+time.sleep(2)
 
-# define lengths (in cm) 
-L_top = 7.5
-L_bot = 7.5
+# define lengths, NOTE: everything is measured in mm
+L_top = 7.5*10
+L_bot = 7.5*10
 
-# end effector
-(x,y) = (1.720, 13.390)
 
-# inverse kinematics math
+# function for inverse kinematics math given an end effector
 def theta_caculations(a1, a2, x, y):
     # solve for q2 first, chose one solution
-    q2 = math.acos((x**2+y**2 - a1**2-a2**2)/(2*a1*a2))
-    
+    #print("here")
+    #print(((x)**2+(y)**2 - (a1)**2-(a2)**2)/(2*a1*a2))
+    q2 = math.acos(((x)**2+(y)**2 - (a1)**2-(a2)**2)/(2*a1*a2))
     # then solve for q1
     q1 = math.atan2(y,x) - math.atan2(a2*math.sin(q2), a1+a2*math.cos(q2))
-    return (math.degrees(q1), math.degrees(q2)) 
+    return (math.degrees(q1), math.degrees(q2))
 
-theta values = theta_caculations(L_bot, L_top, x, y)
+# function that returns list of points on a line between two end points
+def line_point(x1, x2, y1, y2, num):
+    # define x values
+    increment = (x2-x1)/num
+    x = []
+    for i in range(num):
+        x.append(x1 + i*increment) 
+    # find slope
+    m = (y2-y1)/(x2-x1)
+    # define y values along line
+    y = []
+    for i in range(num):
+        y.append(m*(x[i]-x1) + y1)
+    return x,y
+
+# define end effectors, a list of x values and y values, this represents the points that make up M!
+x0,y0 = [-40, -17.197, 0, 17.197, 40], [85, 133.9, 85, 133.9, 85]
+
+# find all of the points x, y points
+x = []
+y = []
+num = 10
+for i in range(len(x0)-1):
+    # find new x and y values
+    xi, yi = line_point(x0[i], x0[i+1], y0[i], y0[i+1], num)
+    # add new values into the list including the originals
+    x.append(xi)
+    y.append(yi)
+
+# get rid of the sublists
+x = [item for sublist in x for item in sublist]
+y = [item for sublist in y for item in sublist]
+print("x")
+print(x)
+print(len(x))
+#print("y")
+#print(y)
+
+# create list of theta values from given x y values
+theta_top = []
+theta_bot = []
+
+# find all theta values
+for i in range(len(x)):
+    print("x(i)")
+    print(x[i])
+    print(i)
+    theta_values = theta_caculations(L_bot, L_top, x[i], y[i])
+    # add 90 because i am defining the positive x direction as 0
+    theta_top.append(theta_values[1]+ 90)
+    theta_bot.append(theta_values[0])
 
 
+#execute all angle 
+for i in range(len(x)):
+    servo_top.write(theta_top[i])
+    servo_bot.write(theta_bot[i])
+    time.sleep(.25) 
     
-    
 
-display.rect(10,10,60,50,1)
-display.text('Good Morning', 0, 0, 1)
-display.show()
-    
