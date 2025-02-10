@@ -57,7 +57,7 @@ x0,y0 = [-47.049, -42.302, -49.666, -36.475, -7.771, -6.476, 4.962, 31.291, 52.6
 # find all of the points x, y points
 x = []
 y = []
-num = 4
+num = 15
 for i in range(len(x0)-1):
     # find new x and y values
     xi, yi = line_point(x0[i], x0[i+1], y0[i], y0[i+1], num)
@@ -89,7 +89,7 @@ print(theta_bot)
 for i in range(len(x)):
     servo_top.write(theta_top[i])
     servo_bot.write(theta_bot[i])
-    time.sleep(.1) 
+    time.sleep(.05) 
     
 
 
